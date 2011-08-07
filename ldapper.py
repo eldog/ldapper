@@ -19,7 +19,7 @@ if sys.maxsize > 2 *32:
     _plat_lib_path = abspath(_LIB64_DIR)
     sys.path = remove_values_from_list(sys.path, abspath(_LIB32_DIR))    
 else:
-    _plat_lib_path = _abspath(LIB32_DIR)
+    _plat_lib_path = abspath(_LIB32_DIR)
     sys.path = remove_values_from_list(sys.path, abspath(_LIB64_DIR))
 if _plat_lib_path not in sys.path:
     sys.path.append(_plat_lib_path)
