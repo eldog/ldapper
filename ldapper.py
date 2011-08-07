@@ -7,7 +7,7 @@ import sys
 
 def abspath(path):
     return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), _LIB_DIR))
+        os.path.join(os.path.dirname(__file__), path))
 
 def remove_values_from_list(the_list, val):
     return [value for value in the_list if value != val]
@@ -15,10 +15,12 @@ def remove_values_from_list(the_list, val):
 _LIB_DIR = 'lib/'
 _LIB32_DIR = 'lib32/'
 _LIB64_DIR = 'lib64/'
-if sys.maxsize > 2 *32:
+if sys.maxsize > 2**32:
+    print 'using 64bit libs'
     _plat_lib_path = abspath(_LIB64_DIR)
     sys.path = remove_values_from_list(sys.path, abspath(_LIB32_DIR))    
 else:
+    print 'using 32bit libs'
     _plat_lib_path = abspath(_LIB32_DIR)
     sys.path = remove_values_from_list(sys.path, abspath(_LIB64_DIR))
 if _plat_lib_path not in sys.path:
@@ -60,11 +62,15 @@ class Ldapper(object):
 def main():
     parser = optparse.OptionParser(usage='%prog [-l] [-p]',
                                    version='%prog ver. 0.1 2011')
+    parser.add_option('-c', '--cherrypy-host', dest='chost',
+                      help='the address of the cherrypy host')
     parser.add_option('-l', '--ldap-host', dest='host',
                       help='the address of the ldap host')
     parser.add_option('-p', '--port', dest='port',
                       help='the port to contact the ldap host on')
     (options, args) = parser.parse_args()
+    if options.chost:
+        cherrypy.config.update({'server.socket_host': options.chost})
     if not options.host:
         options.host = _LDAP_HOST
     if not options.port:

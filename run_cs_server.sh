@@ -2,5 +2,5 @@
 
 set -o errexit
 
-./ldapper.py -l edir.cs.man.ac.uk -p 389
+./ldapper.py -c 130.88.194.22 -l edir.man.ac.uk -p 389
 
