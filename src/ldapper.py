@@ -5,9 +5,7 @@ import os
 import subprocess
 import sys
 
-def abspath(path):
-    return os.path.abspath(
-        os.path.join(os.path.dirname(__file__), path))
+from utils import abspath
 
 def remove_values_from_list(the_list, val):
     return [value for value in the_list if value != val]
@@ -42,15 +40,16 @@ class Ldapper(object):
         self._port = port
         
     @cherrypy.expose
-    def lookup(self, uman_id=None):
-        if not uman_id:
-            raise cherrypy.HTTPError(400, 'No uman id given')
+    def lookup(self, uman_mag_stripe=None):
+        if not uman_mag_stripe:
+            raise cherrypy.HTTPError(400, 'No uman mag stripe given')
         cherrypy.response.headers['Content-Type'] = 'application/json'
         ldap_conn = ldap.initialize(
             'ldap://%s:%s' % (self._host, self._port))
         try:
             ldap_result = ldap_conn.search_s(
-                '', ldap.SCOPE_SUBTREE, '(umanPersonID=%s)' % uman_id)
+                '', ldap.SCOPE_SUBTREE,
+                '(umanMagStripe=%s)' % uman_mag_stripe)
         except ldap.SERVER_DOWN:
             raise cherrypy.HTTPError(500, 'Unable to contact LDAP server')
         if ldap_result:
