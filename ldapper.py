@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import json
 import optparse
 import os
@@ -59,7 +58,8 @@ class Ldapper(object):
         return json.dumps(ldap_result)
 
 def main():
-    parser = optparse.OptionParser()
+    parser = optparse.OptionParser(usage='%prog [-l] [-p]',
+                                   version='%prog ver. 0.1 2011')
     parser.add_option('-l', '--ldap-host', dest='host',
                       help='the address of the ldap host')
     parser.add_option('-p', '--port', dest='port',
