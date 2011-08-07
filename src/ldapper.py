@@ -12,9 +12,9 @@ def abspath(path):
 def remove_values_from_list(the_list, val):
     return [value for value in the_list if value != val]
 
-_LIB_DIR = 'lib/'
-_LIB32_DIR = 'lib32/'
-_LIB64_DIR = 'lib64/'
+_LIB_DIR = '../lib/'
+_LIB32_DIR = '../lib32/'
+_LIB64_DIR = '../lib64/'
 if sys.maxsize > 2**32:
     print 'using 64bit libs'
     _plat_lib_path = abspath(_LIB64_DIR)

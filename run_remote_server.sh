@@ -12,7 +12,7 @@ echo "starting ssh tunnel for $CS_USERNAME"
 SSH="ssh -N -L 8000:edir.man.ac.uk:389 -L 8001:ldap.man.ac.uk:389 $CS_USERNAME@$CS_MACHINE.cs.man.ac.uk"
 eval ${SSH} &
 
-./ldapper.py -l localhost -p 8000
+src/ldapper.py -l localhost -p 8000
 
 SSH_PID=`ps ax | grep -e "${SSH}" | grep -v grep | awk '{print $1}'`
 kill $SSH_PID
