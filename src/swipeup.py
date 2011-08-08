@@ -2,6 +2,7 @@
 
 import json
 import pickle
+import urllib
 import urllib2
 import sys
 import threading
@@ -26,9 +27,9 @@ MAG_STRIP_FILE = 'mag_strip_set.pickle'
 
 def fetch_ldap_details(mag_strip):
     try:
-        response = urllib2.urlopen('http://%s:%s/%s?%s=%s' % 
-            (_HOST, _PORT, _API, _QUERY, mag_strip))
-    except HTTPError, e:
+        response = urllib2.urlopen('http://%s:%s/' % 
+            (_HOST, _PORT), data=urllib.urlencode({ _QUERY : mag_strip }))
+    except urllib2.HTTPError, e:
         print e
         return False
     print response.read()
