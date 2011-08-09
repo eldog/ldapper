@@ -114,23 +114,24 @@ class ThreadCardReader(threading.Thread):
                 self.mag_stripe_queue.put(mag_stripe)
 
 
-class ThreadWidgetResponse(threading.Thread):
+class ThreadResponse(threading.Thread):
 
-    def __init__(self, widget, response_queue):
+    def __init__(self, callbacks, response_queue):
         threading.Thread.__init__(self)
-        self.widget = widget
         self.response_queue = response_queue
+        self.callbacks = callbacks
 
     def run(self):
         while True:
             response = self.response_queue.get()
-            self.widget.json_update(response)
+            for callback in self.callbacks:
+                callback(response)
             self.response_queue.task_done()
 
 
 class _SwipeFrame(tk.Frame, object):
 
-    def __init__(self, response_queue, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(_SwipeFrame, self).__init__(*args, **kwargs)
         
         self.button = tk.Button(self, text='exit', command=self.quit)
@@ -140,11 +141,7 @@ class _SwipeFrame(tk.Frame, object):
         self.response_frame.grid(row=0, column=0, padx=5, 
                                  pady=5, stick=tk.EW)
 
-        widget_thread = ThreadWidgetResponse(self.response_frame, 
-                                             response_queue)
-        widget_thread.setDaemon(True)
-        widget_thread.start()
-    
+
 class _ResponseFrame(tk.Frame, object):
 
     def __init__(self, *args, **kwargs):
@@ -152,7 +149,6 @@ class _ResponseFrame(tk.Frame, object):
 
         self.name_label = tk.Label(self, text='Name:')
         self.name_label.grid(row=0, column=0, padx=5, pady=5, stick=tk.W)
-
         self.name = tk.StringVar()
         self.name_entry = tk.Entry(self, textvariable=self.name,
                                    width=50)
@@ -160,7 +156,6 @@ class _ResponseFrame(tk.Frame, object):
 
         self.email_label = tk.Label(self, text='Email:')
         self.email_label.grid(row=1, column=0, padx=5, pady=5, stick=tk.W)
-
         self.email = tk.StringVar()
         self.email_entry = tk.Entry(self, textvariable=self.email, 
                                     width=50)
@@ -169,7 +164,6 @@ class _ResponseFrame(tk.Frame, object):
         self.student_id_label = tk.Label(self, text='Student ID:')
         self.student_id_label.grid(row=2, column=0, padx=5, pady=5,
                                    stick=tk.W)
-        
         self.student_id = tk.StringVar()
         self.student_id_entry = tk.Entry(self,
                                          textvariable=self.student_id,
@@ -178,21 +172,36 @@ class _ResponseFrame(tk.Frame, object):
                                    stick=tk.W)
         
     def json_update(self, json_response):
+        print json.dumps(json_response)
         self.name.set(json_response['cn'][0])
         self.email.set(json_response['mail'][0])
         self.student_id.set(json_response['umanPersonID'][0])
 
+
 class SwipeUpGUI(tk.Tk, object):
     
-    def __init__(self, response_queue, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super(SwipeUpGUI, self).__init__(*args, **kwargs)
         self.title('Swipe Up')
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         
-        self._frame = _SwipeFrame(response_queue, master=self)
-        self._frame.grid(row=1, column=0, padx=5, pady=5)
+        self.frame = _SwipeFrame(master=self)
+        self.frame.grid(row=1, column=0, padx=5, pady=5)
 
+def send_to_server(json_response):
+    given_name = json_response['givenName'][0]
+    surname = json_response['sn'][0]
+    email = json_response['mail'][0]
+    student_id = json_response['umanPersonID'][0]
+
+    params = urllib.urlencode({'given_name' : given_name,
+                               'surname' : surname,
+                               'email' : email,
+                               'student_id' : student_id})
+    response = urllib2.urlopen('http://%s:%s/' % (_HOST, _PORT),
+                               data=params)
+    print response.read()
             
 def main():
     parser = optparse.OptionParser(usage='%prog [-l] [-p]',
@@ -221,7 +230,17 @@ def main():
     card_thread.setDaemon(True)
     card_thread.start()
 
-    swipe_gui = SwipeUpGUI(response_queue)
+    swipe_gui = SwipeUpGUI()
+    
+    response_thread = ThreadResponse(
+                        [
+                            swipe_gui.frame.response_frame.json_update,
+                            send_to_server
+                        ],
+                        response_queue)
+    response_thread.setDaemon(True)
+    response_thread.start()
+    
     swipe_gui.mainloop()
 
 if __name__ == '__main__':

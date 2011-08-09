@@ -38,23 +38,15 @@ class Member(JsonableModel):
     modified = db.DateTimeProperty(auto_now=True)
 
 
-def fetch_ldap_details(mag_strip):
-    response = urllib2.urlopen('http://%s:%s/%s?%s=%s' % 
-        (_HOST, _PORT, _API, _QUERY, mag_strip))
-    return json.loads(response.read())
-
 class SwipeReg(webapp.RequestHandler):
     def post(self):
-        mag_stripe = self.request.get('uman_mag_stripe')
-        if mag_stripe:
-            details = fetch_ldap_details(mag_stripe)
-            member = Member(given_name=details["givenName"][0],
-                            surname=details["sn"][0],
-                            email=details["mail"][0],
-                            student_id=details["umanPersonID"][0],
-                            key_name=details["umanPersonID"][0])
-            member.put()
-            self.response.out.write(member.dump())
+        member = Member(given_name=self.request.get('given_name'),
+                        surname=self.request.get('surname'),
+                        email=self.request.get('email'),
+                        student_id=self.request.get('student_id'),
+                        key_name=self.request.get('student_id'))
+        member.put()
+        self.response.out.write(member.dump())
 
     def get(self):
         members = Member.all()
